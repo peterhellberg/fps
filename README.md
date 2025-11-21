@@ -53,3 +53,4 @@ Key           | Action
 **Click**     | Capture mouse
 **Escape**    | Release mouse
 **Q**         | Quit
+**P**         | Print player state
