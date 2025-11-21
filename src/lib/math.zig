@@ -110,3 +110,112 @@ pub inline fn perspective(fov: f32, asp: f32, n: f32, f: f32) Mat4 {
         },
     };
 }
+
+test "Vec3.new and zero" {
+    const v = Vec3.new(1.0, 2.0, 3.0);
+    try std.testing.expect(v.data[0] == 1.0);
+    try std.testing.expect(v.data[1] == 2.0);
+    try std.testing.expect(v.data[2] == 3.0);
+
+    const z = Vec3.zero();
+    try std.testing.expect(z.data[0] == 0.0);
+    try std.testing.expect(z.data[1] == 0.0);
+    try std.testing.expect(z.data[2] == 0.0);
+}
+
+test "Vec3.add and sub" {
+    const a = Vec3.new(1, 2, 3);
+    const b = Vec3.new(4, 5, 6);
+    const sum = Vec3.add(a, b);
+    try std.testing.expect(sum.data[0] == 5);
+    try std.testing.expect(sum.data[1] == 7);
+    try std.testing.expect(sum.data[2] == 9);
+
+    const diff = Vec3.sub(b, a);
+    try std.testing.expect(diff.data[0] == 3);
+    try std.testing.expect(diff.data[1] == 3);
+    try std.testing.expect(diff.data[2] == 3);
+}
+
+test "Vec3.scale" {
+    const v = Vec3.new(1, 2, 3);
+    const s = Vec3.scale(v, 2.0);
+    try std.testing.expect(s.data[0] == 2);
+    try std.testing.expect(s.data[1] == 4);
+    try std.testing.expect(s.data[2] == 6);
+}
+
+test "Vec3.dot and length" {
+    const a = Vec3.new(1, 0, 0);
+    const b = Vec3.new(0, 1, 0);
+    try std.testing.expect(a.dot(b) == 0.0);
+
+    const c = Vec3.new(3, 4, 0);
+    try std.testing.expect(c.length() == 5.0);
+}
+
+test "Vec3.normalize" {
+    const v = Vec3.new(3, 0, 4);
+    const n = v.normalize();
+    const len = n.length();
+    try std.testing.expect(@abs(len - 1.0) < 0.0001);
+}
+
+test "Vec3.cross" {
+    const a = Vec3.new(1, 0, 0);
+    const b = Vec3.new(0, 1, 0);
+    const c = Vec3.cross(a, b);
+    try std.testing.expect(c.data[0] == 0);
+    try std.testing.expect(c.data[1] == 0);
+    try std.testing.expect(c.data[2] == 1);
+}
+
+test "Mat4.mul identity" {
+    var a: Mat4 = undefined;
+    var b: Mat4 = undefined;
+
+    // identity matrices
+    a.data = [_]f32{
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    };
+    b.data = a.data;
+
+    const r = Mat4.mul(a, b);
+
+    inline for (0..16) |i| {
+        try std.testing.expect(r.data[i] == a.data[i]);
+    }
+}
+
+test "Mat4.mulVec simple translation" {
+    var m: Mat4 = undefined;
+    m.data = [_]f32{
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        2, 3, 4, 1, // translation in last row
+    };
+
+    const v = Vec3.new(1, 2, 3);
+    const result = Mat4.mulVec(m, v);
+
+    try std.testing.expect(result[0] == 3); // 1 + 2
+    try std.testing.expect(result[1] == 5); // 2 + 3
+    try std.testing.expect(result[2] == 7); // 3 + 4
+    try std.testing.expect(result[3] == 1);
+}
+
+test "perspective matrix basic" {
+    const fov = 90.0;
+    const asp = 1.0;
+    const n = 0.1;
+    const f = 100.0;
+    const p = perspective(fov, asp, n, f);
+
+    // basic sanity checks
+    try std.testing.expect(p.data[15] == 0); // bottom-right is 0 in this perspective
+    try std.testing.expect(p.data[11] == -1); // correct projection
+}
