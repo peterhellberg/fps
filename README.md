@@ -10,8 +10,8 @@ based on <https://github.com/lizard-demon/fps>
 
 Build a small native binary;
 
-```console
-$ zig build --release=small
+```sh {name=build}
+zig build --release=small
 ```
 
 > [!Tip]
@@ -25,13 +25,13 @@ $ zig build --release=small
 
 Build and run a small native binary;
 
-```console
+```sh {name=native}
 zig build run --release=small
 ```
 
 Build and run a small [WebAssembly](https://webassembly.org/) binary in your browser;
 
-```console
+```sh {name=web}
 zig build run --release=small -Dtarget=wasm32-emscripten
 ```
 
@@ -39,7 +39,7 @@ zig build run --release=small -Dtarget=wasm32-emscripten
 
 You can run all the test cases like this;
 
-```console
+```sh {name=test}
 zig build test
 ```
 
