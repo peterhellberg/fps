@@ -26,20 +26,21 @@ $ zig build --release=small
 Build and run a small native binary;
 
 ```console
-$ zig build run --release=small
+zig build run --release=small
 ```
 
 Build and run a small [WebAssembly](https://webassembly.org/) binary in your browser;
 
 ```console
-$ zig build run --release=small -Dtarget=wasm32-emscripten
+zig build run --release=small -Dtarget=wasm32-emscripten
 ```
 
 ### Test
 
 You can run all the test cases like this;
+
 ```console
-$ zig build test
+zig build test
 ```
 
 ## Input
