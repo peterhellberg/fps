@@ -130,10 +130,10 @@ pub const World = struct {
 };
 
 pub const Player = struct {
-    pos: Vec3 = .new(2, 3, 2),
+    pos: Vec3 = .new(2.4743795, 1.8003182, 3.4313726),
     vel: Vec3 = .zero(),
-    yaw: f32 = 0,
-    pitch: f32 = 0,
+    yaw: f32 = -28.86793,
+    pitch: f32 = -0.0359997,
     mouse_dx: f32 = 0,
     mouse_dy: f32 = 0,
     keys: packed struct {
@@ -437,6 +437,7 @@ export fn event(e: [*c]const app.Event) void {
             .S => Engine.player.keys.s = key_state,
             .D => Engine.player.keys.d = key_state,
             .Q => app.requestQuit(),
+            .P => std.debug.print("Player: {any}\n", .{Engine.player}),
             .SPACE => Engine.player.keys.space = key_state,
             .ESCAPE => if (key_state and Engine.player.mouse_locked) {
                 Engine.player.mouse_locked = false;
