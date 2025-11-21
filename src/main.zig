@@ -136,11 +136,19 @@ pub const Player = struct {
 
     fn update(p: *Player, w: *const World, dt: f32, jump_time: *f32) void {
         p.yaw += p.mouse_dx * 0.002;
-        p.pitch = std.math.clamp(p.pitch + p.mouse_dy * 0.002, -1.5, 1.5);
+        p.pitch = std.math.clamp(
+            p.pitch + p.mouse_dy * 0.002,
+            -1.5,
+            1.5,
+        );
         p.mouse_dx = 0;
         p.mouse_dy = 0;
 
-        const sin_yaw, const cos_yaw = .{ @sin(p.yaw), @cos(p.yaw) };
+        const sin_yaw, const cos_yaw = .{
+            @sin(p.yaw),
+            @cos(p.yaw),
+        };
+
         const forward: f32 = if (p.keys.w) 1.0 else if (p.keys.s) -1.0 else 0.0;
         const strafe: f32 = if (p.keys.d) 1.0 else if (p.keys.a) -1.0 else 0.0;
 
