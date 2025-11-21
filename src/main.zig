@@ -5,10 +5,10 @@ const ig = @import("cimgui");
 const math = @import("lib/math.zig");
 const shader = @import("shader/cube.glsl.zig");
 
-const sg = sokol.gfx;
-const sapp = sokol.app;
-const saudio = sokol.audio;
-const simgui = sokol.imgui;
+const gfx = sokol.gfx;
+const app = sokol.app;
+const sfx = sokol.audio;
+const gui = sokol.imgui;
 
 const Vec3 = math.Vec3;
 const Mat4 = math.Mat4;
@@ -25,7 +25,9 @@ pub const World = struct {
 
     fn get(w: *const World, x: i32, y: i32, z: i32) bool {
         if (x < 0 or x >= 16 or y < 0 or y >= 16 or z < 0 or z >= 16) return false;
+
         const idx = @as(usize, @intCast(x)) + @as(usize, @intCast(y)) * 16 + @as(usize, @intCast(z)) * 256;
+
         return w.blocks[idx];
     }
 
@@ -45,6 +47,7 @@ pub const World = struct {
                 }
             }
         }
+
         return false;
     }
 
@@ -81,6 +84,7 @@ pub const World = struct {
             const idx = x + y * 16 + z * 256;
 
             if (!w.blocks[idx]) continue;
+
             const pos = @Vector(3, f32){
                 @floatFromInt(x),
                 @floatFromInt(y),
@@ -96,18 +100,25 @@ pub const World = struct {
 
                 if (!w.get(neighbor[0], neighbor[1], neighbor[2])) {
                     if (vertices + 4 > w.vertices.len or indices + 6 > w.indices.len) break;
+
                     const bi = @as(u16, @intCast(vertices));
 
                     for (quad) |v| {
                         w.vertices[vertices] = .{
-                            .pos = .{ (pos + v)[0], (pos + v)[1], (pos + v)[2] },
+                            .pos = .{
+                                (pos + v)[0],
+                                (pos + v)[1],
+                                (pos + v)[2],
+                            },
                             .col = color,
                         };
+
                         vertices += 1;
                     }
 
                     for ([_]u16{ 0, 1, 2, 0, 2, 3 }) |i| {
                         w.indices[indices] = bi + i;
+
                         indices += 1;
                     }
                 }
@@ -159,8 +170,8 @@ pub const Player = struct {
         );
 
         const old = p.pos;
-        const hull = Vec3.new(0.4, 0.8, 0.4);
         const old_y_vel = p.vel.data[1];
+        const hull = Vec3.new(0.4, 0.8, 0.4);
 
         inline for (.{ 0, 2, 1 }) |axis| {
             p.pos.data[axis] += p.vel.data[axis] * dt;
@@ -212,20 +223,22 @@ pub const Player = struct {
 };
 
 const Render = struct {
-    pipeline: sg.Pipeline = undefined,
-    bindings: sg.Bindings = undefined,
     vertices: u32 = undefined,
-    pass_action: sg.PassAction = undefined,
+    pipeline: gfx.Pipeline = undefined,
+    bindings: gfx.Bindings = undefined,
+    pass_action: gfx.PassAction = undefined,
     proj: Mat4 = undefined,
 
     fn init(r: *Render, w: *const World, indices: u32) void {
-        var layout = sg.VertexLayoutState{};
+        var layout = gfx.VertexLayoutState{};
 
         layout.attrs[0].format = .FLOAT3;
         layout.attrs[1].format = .FLOAT4;
 
-        r.pipeline = sg.makePipeline(.{
-            .shader = sg.makeShader(shader.cubeShaderDesc(sg.queryBackend())),
+        r.pipeline = gfx.makePipeline(.{
+            .shader = gfx.makeShader(
+                shader.cubeShaderDesc(gfx.queryBackend()),
+            ),
             .layout = layout,
             .index_type = .UINT16,
             .depth = .{
@@ -237,8 +250,8 @@ const Render = struct {
 
         r.bindings = .{
             .vertex_buffers = .{
-                sg.makeBuffer(.{
-                    .data = sg.asRange(w.vertices[0 .. indices / 6 * 4]),
+                gfx.makeBuffer(.{
+                    .data = gfx.asRange(w.vertices[0 .. indices / 6 * 4]),
                 }),
                 .{},
                 .{},
@@ -248,22 +261,24 @@ const Render = struct {
                 .{},
                 .{},
             },
-            .index_buffer = sg.makeBuffer(.{
+            .index_buffer = gfx.makeBuffer(.{
                 .usage = .{ .index_buffer = true },
-                .data = sg.asRange(w.indices[0..indices]),
+                .data = gfx.asRange(w.indices[0..indices]),
             }),
+        };
+
+        const sky: gfx.Color = .{
+            .r = 0.2,
+            .g = 0.6,
+            .b = 1.0,
+            .a = 1.0,
         };
 
         r.pass_action = .{
             .colors = .{
                 .{
                     .load_action = .CLEAR,
-                    .clear_value = .{
-                        .r = 0.1,
-                        .g = 0.1,
-                        .b = 0.2,
-                        .a = 1.0,
-                    },
+                    .clear_value = sky,
                 },
                 .{},
                 .{},
@@ -274,39 +289,57 @@ const Render = struct {
                 .{},
             },
         };
+
         r.vertices = indices;
+
         r.proj = math.perspective(90, 1.33, 0.1, 100);
     }
 
     fn draw(r: *const Render, view_mat: Mat4) void {
         const mvp = Mat4.mul(r.proj, view_mat);
 
-        sg.beginPass(.{
+        gfx.beginPass(.{
             .action = r.pass_action,
             .swapchain = sokol.glue.swapchain(),
         });
 
-        sg.applyPipeline(r.pipeline);
-        sg.applyBindings(r.bindings);
-        sg.applyUniforms(0, sg.asRange(&mvp));
+        gfx.applyPipeline(r.pipeline);
+        gfx.applyBindings(r.bindings);
 
-        sg.draw(0, r.vertices, 1);
+        gfx.applyUniforms(0, gfx.asRange(&mvp));
+
+        gfx.draw(0, r.vertices, 1);
     }
 
-    fn crosshair(_: *const Render) void {
-        const cx, const cy = .{
-            @as(f32, @floatFromInt(sapp.width())) * 0.5,
-            @as(f32, @floatFromInt(sapp.height())) * 0.5,
-        };
+    fn drawCrosshair(_: *const Render, cx: f32, cy: f32, len: f32, thickness: f32, col: ig.ImU32) void {
+        const draw_list = ig.igGetWindowDrawList();
 
+        ig.ImDrawList_AddLineEx(
+            draw_list,
+            .{ .x = cx - len, .y = cy },
+            .{ .x = cx + len, .y = cy },
+            col,
+            thickness,
+        );
+
+        ig.ImDrawList_AddLineEx(
+            draw_list,
+            .{ .x = cx, .y = cy - len },
+            .{ .x = cx, .y = cy + len },
+            col,
+            thickness,
+        );
+    }
+
+    fn crosshair(r: *const Render) void {
         ig.igSetNextWindowPos(
             .{ .x = 0, .y = 0 },
             ig.ImGuiCond_Always,
         );
 
         ig.igSetNextWindowSize(.{
-            .x = @floatFromInt(sapp.width()),
-            .y = @floatFromInt(sapp.height()),
+            .x = @floatFromInt(app.width()),
+            .y = @floatFromInt(app.height()),
         }, ig.ImGuiCond_Always);
 
         _ = ig.igBegin(
@@ -315,20 +348,12 @@ const Render = struct {
             ig.ImGuiWindowFlags_NoTitleBar | ig.ImGuiWindowFlags_NoResize | ig.ImGuiWindowFlags_NoMove | ig.ImGuiWindowFlags_NoBackground | ig.ImGuiWindowFlags_NoInputs,
         );
 
-        const draw_list = ig.igGetWindowDrawList();
+        const cx, const cy = .{
+            @as(f32, @floatFromInt(app.width())) * 0.5,
+            @as(f32, @floatFromInt(app.height())) * 0.5,
+        };
 
-        ig.ImDrawList_AddLine(
-            draw_list,
-            .{ .x = cx - 10, .y = cy },
-            .{ .x = cx + 10, .y = cy },
-            0xFFFFFF00,
-        );
-        ig.ImDrawList_AddLine(
-            draw_list,
-            .{ .x = cx, .y = cy - 10 },
-            .{ .x = cx, .y = cy + 10 },
-            0xFFFF0000,
-        );
+        r.drawCrosshair(cx, cy, 30, 5, 0xFF00FF00);
 
         ig.igEnd();
     }
@@ -359,15 +384,9 @@ fn audio(buf: [*c]f32, frames: i32, channels: i32) callconv(.c) void {
 }
 
 export fn init() void {
-    sg.setup(.{
-        .environment = sokol.glue.environment(),
-    });
-
-    saudio.setup(.{
-        .stream_cb = audio,
-    });
-
-    simgui.setup(.{});
+    gfx.setup(.{ .environment = sokol.glue.environment() });
+    sfx.setup(.{ .stream_cb = audio });
+    gui.setup(.{});
 
     for (0..16) |x| for (0..16) |y| for (0..16) |z| {
         if (y == 0 or x == 0 or x == 15 or z == 0 or z == 15 or (x % 4 == 0 and z % 4 == 0 and y < 3)) {
@@ -383,32 +402,31 @@ export fn init() void {
 }
 
 export fn frame() void {
-    Engine.player.update(&Engine.world, @floatCast(sapp.frameDuration()), &Engine.jump_time);
+    Engine.player.update(&Engine.world, @floatCast(app.frameDuration()), &Engine.jump_time);
 
-    simgui.newFrame(.{
-        .width = sapp.width(),
-        .height = sapp.height(),
-        .delta_time = sapp.frameDuration(),
+    gui.newFrame(.{
+        .width = app.width(),
+        .height = app.height(),
+        .delta_time = app.frameDuration(),
     });
 
     Engine.render.draw(Engine.player.view());
     Engine.render.crosshair();
 
-    simgui.render();
+    gui.render();
 
-    sg.endPass();
-    sg.commit();
+    gfx.endPass();
+    gfx.commit();
 }
 
 export fn cleanup() void {
-    simgui.shutdown();
-    saudio.shutdown();
-
-    sg.shutdown();
+    gui.shutdown();
+    sfx.shutdown();
+    gfx.shutdown();
 }
 
-export fn event(e: [*c]const sapp.Event) void {
-    _ = simgui.handleEvent(e.*);
+export fn event(e: [*c]const app.Event) void {
+    _ = gui.handleEvent(e.*);
 
     const key_state = e.*.type == .KEY_DOWN;
     switch (e.*.type) {
@@ -417,19 +435,19 @@ export fn event(e: [*c]const sapp.Event) void {
             .A => Engine.player.keys.a = key_state,
             .S => Engine.player.keys.s = key_state,
             .D => Engine.player.keys.d = key_state,
-            .Q => sapp.requestQuit(),
+            .Q => app.requestQuit(),
             .SPACE => Engine.player.keys.space = key_state,
             .ESCAPE => if (key_state and Engine.player.mouse_locked) {
                 Engine.player.mouse_locked = false;
-                sapp.showMouse(true);
-                sapp.lockMouse(false);
+                app.showMouse(true);
+                app.lockMouse(false);
             },
             else => {},
         },
         .MOUSE_DOWN => if (e.*.mouse_button == .LEFT and !Engine.player.mouse_locked) {
             Engine.player.mouse_locked = true;
-            sapp.showMouse(false);
-            sapp.lockMouse(true);
+            app.showMouse(false);
+            app.lockMouse(true);
         },
         .MOUSE_MOVE => if (Engine.player.mouse_locked) {
             Engine.player.mouse_dx += e.*.mouse_dx;
@@ -440,7 +458,7 @@ export fn event(e: [*c]const sapp.Event) void {
 }
 
 pub fn main() void {
-    sapp.run(.{
+    app.run(.{
         .init_cb = init,
         .frame_cb = frame,
         .cleanup_cb = cleanup,
