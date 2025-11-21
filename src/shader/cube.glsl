@@ -44,21 +44,19 @@ void main() {
     vec3 face_tint;
     
     if (abs(n.x) > 0.5) {
-        face_tint = vec3(1.0, 0.4, 0.0); // #FF6600
+      face_tint = vec3(1.0, 0.3, 1.0); // neon pink
     } else if (abs(n.y) > 0.5) {
-        face_tint = vec3(0.0, 1.0, 1.0); // #00FFFF
+      face_tint = vec3(0.16, 0.16, 0.16); // dark gray
     } else {
-        face_tint = vec3(0.0, 0.8, 0.66); // #00CCAA
+      face_tint = vec3(0.25, 0.25, 0.25); // light gray
     }
 
-    // Lighten lighting: less directional shadow, more ambient
-    float light = dot(n, normalize(vec3(0.0, -1.0, -1.0))) * 0.3 + 0.7;
-
+    float light = 0.75 + 0.25 * abs(n.y) + 0.1 * sin(world_pos.y * 10.0);
+      
     // clamp to avoid overbright
     light = clamp(light, 0.0, 1.0);
 
-    // Optional procedural variation per voxel for slight color variation
-    float variation = fract(sin(dot(floor(world_pos.xy), vec2(12.9898,78.233))) * 43758.5453);
+    float variation = 0.85 + 0.15 * fract(sin(dot(floor(world_pos.xy), vec2(12.9898,78.233))) * 43758.5453);
 
     face_tint *= 0.85 + 0.15 * variation;
 
