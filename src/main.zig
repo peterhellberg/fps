@@ -130,8 +130,8 @@ pub const World = struct {
 };
 
 pub const Player = struct {
-    pos: Vec3 = Vec3.new(2, 3, 2),
-    vel: Vec3 = Vec3.zero(),
+    pos: Vec3 = .new(2, 3, 2),
+    vel: Vec3 = .zero(),
     yaw: f32 = 0,
     pitch: f32 = 0,
     mouse_dx: f32 = 0,
@@ -171,12 +171,13 @@ pub const Player = struct {
 
         const old = p.pos;
         const old_y_vel = p.vel.data[1];
-        const hull = Vec3.new(0.4, 0.8, 0.4);
+
+        const hull: Vec3 = .new(0.4, 0.8, 0.4);
 
         inline for (.{ 0, 2, 1 }) |axis| {
             p.pos.data[axis] += p.vel.data[axis] * dt;
 
-            if (w.collision(Vec3.sub(p.pos, hull), Vec3.add(p.pos, hull))) {
+            if (w.collision(.sub(p.pos, hull), .add(p.pos, hull))) {
                 p.pos.data[axis] = old.data[axis];
 
                 if (axis == 1) {
@@ -268,9 +269,9 @@ const Render = struct {
         };
 
         const sky: gfx.Color = .{
-            .r = 0.2,
-            .g = 0.6,
-            .b = 1.0,
+            .r = 0.0,
+            .g = 0.0,
+            .b = 0.0,
             .a = 1.0,
         };
 
@@ -296,7 +297,7 @@ const Render = struct {
     }
 
     fn draw(r: *const Render, view_mat: Mat4) void {
-        const mvp = Mat4.mul(r.proj, view_mat);
+        const mvp: Mat4 = .mul(r.proj, view_mat);
 
         gfx.beginPass(.{
             .action = r.pass_action,
@@ -463,9 +464,9 @@ pub fn main() void {
         .frame_cb = frame,
         .cleanup_cb = cleanup,
         .event_cb = event,
-        .width = 1920,
-        .height = 1080,
         .window_title = "FPS",
+        .fullscreen = true,
+        .high_dpi = true,
     });
 }
 
