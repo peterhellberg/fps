@@ -1,23 +1,48 @@
 # FPS
 
-A simple FPS in [Zig](https://ziglang.org), based on <https://github.com/lizard-demon/fps>
+A simple FPS in [Zig](https://ziglang.org), 
+based on <https://github.com/lizard-demon/fps>
 
 > [!Note]
 > Requires Zig 0.15.2+
 
-## Running
+## Build
 
-```bash
-zig build run
+Build a small native binary;
+
+```console
+$ zig build --release=small
 ```
 
-## Tests
+> [!Tip]
+> The `--release` flag for `zig build` takes the following values:
+>
+> - `fast`
+> - `safe`
+> - `small`
 
-```bash
-zig build test
+### Run
+
+Build and run a small native binary;
+
+```console
+$ zig build run --release=small
 ```
 
-## Controls
+Build and run a small [WebAssembly](https://webassembly.org/) binary in your browser;
+
+```console
+$ zig build run --release=small -Dtarget=wasm32-emscripten
+```
+
+### Test
+
+You can run all the test cases like this;
+```console
+$ zig build test
+```
+
+## Input
 
 Key           | Action
 --------------|------------------
