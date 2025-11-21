@@ -1,0 +1,25 @@
+.{
+    .name = .fps,
+    .version = "0.0.0",
+    .fingerprint = 0x552837f0e119ae44,
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .sokol = .{
+            .url = "git+https://github.com/floooh/sokol-zig.git#df7a116cfd9348d41f58e48e233b432b0b0c5a8a",
+            .hash = "sokol-0.1.0-pb1HK-ECLwAoRg3EsK9-cdL4cO8aSo4_zyOteazyctgx",
+        },
+        .shdc = .{
+            .url = "git+https://github.com/floooh/sokol-tools-bin#b8ab8b925d0fa335f0955ce795aa82d23043b8ee",
+            .hash = "sokolshdc-0.1.0-r2KZDuaScAR1HsO_0iDn0b9OYZsjR_pxQzDufL1kGMFQ",
+        },
+        .cimgui = .{
+            .url = "git+https://github.com/floooh/dcimgui.git#a89e0594214cf315de033c7cb6c144c7b54da09b",
+            .hash = "cimgui-0.1.0-44Clkd6YlAAYULKHDwsDX9EPmka-VAVEjUl-o6ve307E",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
