@@ -6,6 +6,10 @@ based on <https://github.com/lizard-demon/fps>
 > [!Note]
 > Requires Zig 0.15.2+
 
+## Screenshot
+
+![Screenshot](/img/fps.png)
+
 ## Build
 
 Build a small native binary;
