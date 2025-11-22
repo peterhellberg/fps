@@ -3,7 +3,7 @@
 
 @vs vs
 layout(binding = 0) uniform vs_params { 
-  mat4 mvp; 
+  mat4 mvp;
 };
 
 in vec4 position;
@@ -25,42 +25,71 @@ in vec3 world_pos;
 out vec4 frag_color;
 
 void main() {
-    // Compute face normal
-    vec3 n = normalize(cross(dFdx(world_pos), dFdy(world_pos)));
+  // Compute face normal
+  vec3 n = cross(dFdx(world_pos), dFdy(world_pos));
 
-    // Face-based UV
-    vec2 uv = (abs(n.x) > 0.5) ? world_pos.yz
-             : (abs(n.y) > 0.5) ? world_pos.xz
-             : world_pos.xy;
+  float len = length(n);
+  if (len > 0.0) {
+      n /= len;
+  } else {
+      n = vec3(0.0, 1.0, 0.0); // fallback
+  }
 
-    // Grid for voxel outlines
-    vec2 grid = fract(uv * 4);
+  vec3 absN = abs(n);
+  
+  // Select UV plane based on face normal
+  vec2 uv;
+  
+  if (absN.x >= absN.y && absN.x >= absN.z) {
+      uv = world_pos.yz; // X is dominant
+  } else if (absN.y >= absN.z) {
+      uv = world_pos.xz; // Y is dominant
+  } else {
+      uv = world_pos.xy; // Z is dominant
+  }
+  
+  float scaleX = 1.0;
+  float scaleY = 1.0;
 
-    // Smooth outline
-    float outline = min(min(grid.x, 1.0 - grid.x), min(grid.y, 1.0 - grid.y));
-    float edge = 1.0 - smoothstep(0.05, 0.08, outline);
+  // Apply scaling to maintain square voxels
+  uv *= vec2(scaleX, scaleY);
 
-    // Face tint based on normal with complementary colors
-    vec3 face_tint;
-    
-    if (abs(n.x) > 0.5) {
-      face_tint = vec3(1.0, 0.3, 1.0); // neon pink
-    } else if (abs(n.y) > 0.5) {
-      face_tint = vec3(0.16, 0.16, 0.16); // dark gray
-    } else {
-      face_tint = vec3(0.25, 0.25, 0.25); // light gray
-    }
+  // Voxel grid
+  vec2 grid = fract(uv*2.0);
 
-    float light = 0.75 + 0.25 * abs(n.y) + 0.1 * sin(world_pos.y * 10.0);
-      
-    // clamp to avoid overbright
-    light = clamp(light, 0.0, 1.0);
+  // Smooth outline
+  float outline = min(min(grid.x, 1.0 - grid.x), min(grid.y, 1.0 - grid.y));
 
-    float variation = 0.85 + 0.15 * fract(sin(dot(floor(world_pos.xy), vec2(12.9898,78.233))) * 43758.5453);
+  float outlineWidth = 0.15;
+  float bloomStart   = outlineWidth;
+  float bloomEnd     = 0.30;  // controls bloom size
 
-    face_tint *= 0.85 + 0.15 * variation;
+  // Hard outline
+  float outlineEdge = 1.0 - step(outlineWidth, outline);
 
-    frag_color = vec4(face_tint * edge * light, color.a);
+  // Soft bloom halo
+  float bloom = 1.0 - smoothstep(bloomStart, bloomEnd, outline);
+
+  // Combine (bloom adds brightness)
+  float edge = outlineEdge + bloom * 0.8;
+
+  // Face tint based on normal
+  vec3 face_tint;
+
+  if (abs(n.x) > 0.5) {
+    face_tint = vec3(1.0, 0.4, 0.0);
+  } else if (abs(n.z) > 0.0) {
+    face_tint = vec3(0.1, 0.1, 0.1);
+  } else {
+    face_tint = vec3(0.3, 0.3, 0.3);
+  }
+
+  float light = 0.75 + 0.25 * abs(n.y) + 0.1 * sin(world_pos.y * 5.0);
+  light = clamp(light, 0.0, 1.0);
+
+  float variation = 0.85 + 0.15 * fract(sin(dot(floor(world_pos.xy), vec2(12.9898, 78.233))) * 43758.5453);
+  face_tint *= 0.85 + 0.15 * variation;
+  frag_color = vec4(face_tint * edge * light, color.a * 0.6);
 }
 @end
 
