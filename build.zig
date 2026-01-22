@@ -33,6 +33,7 @@ pub fn build(b: *Build) !void {
 
     dep_sokol
         .artifact("sokol_clib")
+        .root_module
         .addIncludePath(dep_cimgui.path(cimgui_conf.include_dir));
 
     const shader = try @import("shdc").createSourceFile(b, .{
@@ -52,8 +53,14 @@ pub fn build(b: *Build) !void {
         .target = target,
         .optimize = optimize,
         .imports = &.{
-            .{ .name = "sokol", .module = dep_sokol.module("sokol") },
-            .{ .name = cimgui_conf.module_name, .module = dep_cimgui.module(cimgui_conf.module_name) },
+            .{
+                .name = "sokol",
+                .module = dep_sokol.module("sokol"),
+            },
+            .{
+                .name = cimgui_conf.module_name,
+                .module = dep_cimgui.module(cimgui_conf.module_name),
+            },
         },
     });
 
@@ -109,10 +116,12 @@ fn buildWeb(b: *Build, opts: Opts) !void {
 
     opts.dep_cimgui
         .artifact(opts.cimgui_clib_name)
+        .root_module
         .addSystemIncludePath(emsdk_incl_path);
 
     opts.dep_cimgui
-        .artifact(opts.cimgui_clib_name).step
+        .artifact(opts.cimgui_clib_name)
+        .step
         .dependOn(&opts.dep_sokol.artifact("sokol_clib").step);
 
     const link_step = try sokol.emLinkStep(b, .{
