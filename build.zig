@@ -29,6 +29,10 @@ pub fn build(b: *Build) !void {
         .optimize = optimize,
     });
 
+    dep_cimgui.artifact(cimgui_conf.clib_name)
+        .root_module
+        .addCMacro("NDEBUG", "0");
+
     const shdc = b.dependency("shdc", .{});
 
     dep_sokol
@@ -94,6 +98,13 @@ fn buildNative(b: *Build, opts: Opts) !void {
     });
 
     exe.step.dependOn(opts.shader);
+
+    // Explicitly link system libs here
+    exe.root_module.linkSystemLibrary("GL", .{});
+    exe.root_module.linkSystemLibrary("X11", .{});
+    exe.root_module.linkSystemLibrary("Xi", .{});
+    exe.root_module.linkSystemLibrary("Xcursor", .{});
+    exe.root_module.linkSystemLibrary("asound", .{});
 
     b.installArtifact(exe);
 
