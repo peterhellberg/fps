@@ -99,12 +99,14 @@ fn buildNative(b: *Build, opts: Opts) !void {
 
     exe.step.dependOn(opts.shader);
 
-    // Explicitly link system libs here
-    exe.root_module.linkSystemLibrary("GL", .{});
-    exe.root_module.linkSystemLibrary("X11", .{});
-    exe.root_module.linkSystemLibrary("Xi", .{});
-    exe.root_module.linkSystemLibrary("Xcursor", .{});
-    exe.root_module.linkSystemLibrary("asound", .{});
+    // Explicitly link Linux system libs; macOS/Windows are handled by sokol-zig.
+    if (opts.mod.resolved_target.?.result.os.tag == .linux) {
+        exe.root_module.linkSystemLibrary("GL", .{});
+        exe.root_module.linkSystemLibrary("X11", .{});
+        exe.root_module.linkSystemLibrary("Xi", .{});
+        exe.root_module.linkSystemLibrary("Xcursor", .{});
+        exe.root_module.linkSystemLibrary("asound", .{});
+    }
 
     b.installArtifact(exe);
 

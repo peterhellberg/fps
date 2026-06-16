@@ -19,7 +19,7 @@ const Vertex = extern struct {
 };
 
 pub const World = struct {
-    blocks: [4096]bool = [_]bool{false} ** 4096,
+    blocks: [4096]bool = @splat(false),
     vertices: [32768]Vertex = undefined,
     indices: [49152]u16 = undefined,
 
